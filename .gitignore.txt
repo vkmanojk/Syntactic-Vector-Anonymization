@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Virtual environments
+venv/
+env/
+.venv/
+ENV/
+
+# Conda
+.conda/
+*.conda
+
+# VS Code
+.vscode/
+
+# PyCharm
+.idea/
+
+# Data
+data/
+
+# Outputs
+outputs/
+
+# Models
+models/
+
+# Temporary files
+*.log
+*.tmp
+.DS_Store
+
+# Large files
+*.parquet
+*.pt
+*.pth
+*.bin
+*.ckpt
