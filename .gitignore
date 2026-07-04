@@ -11,6 +11,7 @@ venv/
 env/
 .venv/
 ENV/
+mi/
 
 # Conda
 .conda/
@@ -30,6 +31,7 @@ outputs/
 
 # Models
 models/
+minde/
 
 # Temporary files
 *.log
