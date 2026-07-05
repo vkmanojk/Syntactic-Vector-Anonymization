@@ -32,6 +32,7 @@ outputs/
 # Models
 models/
 minde/
+saved_inversion_model/
 
 # Temporary files
 *.log
