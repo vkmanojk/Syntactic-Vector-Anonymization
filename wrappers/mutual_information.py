@@ -2,11 +2,22 @@
 Mutual information estimation using MINDE.
 
 This module provides a lightweight wrapper around the MINDE estimator
-used in the thesis. It assumes that the MINDE package and its
-dependencies are installed in the active Python environment.
+used in the thesis.
+
+It assumes that the original MINDE repository has been cloned into the
+project root as:
+
+project/
+├── src/
+├── wrappers/
+├── notebooks/
+└── minde/
 """
 
 from __future__ import annotations
+
+import sys
+from pathlib import Path
 
 import numpy as np
 import torch
@@ -94,91 +105,109 @@ def estimate_mutual_information(
             "Original and anonymized embeddings must have the same shape."
         )
 
-    # Import MINDE only when required
+    # ---------------------------------------------------------
+    # Locate the external MINDE repository
+    # ---------------------------------------------------------
+
+    project_root = Path(__file__).resolve().parent.parent
+    minde_root = project_root / "minde"
+
+    if not minde_root.exists():
+        raise FileNotFoundError(
+            "MINDE repository not found.\n\n"
+            "Clone the original MINDE repository into:\n\n"
+            f"{minde_root}\n"
+        )
+
+    # Temporarily expose MINDE's src package
+    sys.path.insert(0, str(minde_root))
+
     try:
+
         from src.libs.minde import MINDE
         from src.scripts.helper import get_default_config
-    except ImportError as exc:
-        raise ImportError(
-            "MINDE is not available. Activate the MINDE environment "
-            "or install the required dependencies."
-        ) from exc
 
-    original_embeddings = np.asarray(
-        original_embeddings,
-        dtype=np.float32,
-    )
-
-    anonymized_embeddings = np.asarray(
-        anonymized_embeddings,
-        dtype=np.float32,
-    )
-
-    if normalize:
-
-        scaler = StandardScaler()
-
-        original_embeddings = scaler.fit_transform(
-            original_embeddings
+        original_embeddings = np.asarray(
+            original_embeddings,
+            dtype=np.float32,
         )
 
-        anonymized_embeddings = scaler.transform(
-            anonymized_embeddings
+        anonymized_embeddings = np.asarray(
+            anonymized_embeddings,
+            dtype=np.float32,
         )
 
-    dataset = MINDataset(
-        original_embeddings,
-        anonymized_embeddings,
-    )
+        if normalize:
 
-    args = get_default_config()
+            scaler = StandardScaler()
 
-    args.type = "c"
-    args.importance_sampling = True
-    args.arch = "mlp"
-    args.use_ema = True
+            original_embeddings = scaler.fit_transform(
+                original_embeddings
+            )
 
-    args.max_epochs = max_epochs
-    args.warmup_epochs = 5
-    args.test_epoch = 5
+            anonymized_embeddings = scaler.transform(
+                anonymized_embeddings
+            )
 
-    args.lr = learning_rate
-    args.bs = batch_size
+        dataset = MINDataset(
+            original_embeddings,
+            anonymized_embeddings,
+        )
 
-    args.accelerator = (
-        "gpu"
-        if torch.cuda.is_available()
-        else "cpu"
-    )
+        args = get_default_config()
 
-    args.devices = 1
+        # MINDE configuration
+        args.type = "c"
+        args.importance_sampling = True
+        args.arch = "mlp"
+        args.use_ema = True
 
-    args.out_dir = "./outputs"
-    args.benchmark = "embedding_mi"
-    args.seed = random_seed
-    args.mc_iter = 20
+        args.max_epochs = max_epochs
+        args.warmup_epochs = 5
+        args.test_epoch = 5
 
-    loader = DataLoader(
-        dataset,
-        batch_size=batch_size,
-        shuffle=True,
-        num_workers=0,
-    )
+        args.lr = learning_rate
+        args.bs = batch_size
 
-    model = MINDE(
-        args,
-        var_list={
-            "x": original_embeddings.shape[1],
-            "y": anonymized_embeddings.shape[1],
-        },
-        gt=None,
-    )
+        args.accelerator = (
+            "gpu"
+            if torch.cuda.is_available()
+            else "cpu"
+        )
 
-    model.fit(loader, loader)
+        args.devices = 1
 
-    mi, mi_sigma = model.compute_mi()
+        args.out_dir = "./outputs"
+        args.benchmark = "embedding_mi"
+        args.seed = random_seed
+        args.mc_iter = 20
 
-    return float(mi), float(mi_sigma)
+        loader = DataLoader(
+            dataset,
+            batch_size=batch_size,
+            shuffle=True,
+            num_workers=0,
+        )
+
+        model = MINDE(
+            args,
+            var_list={
+                "x": original_embeddings.shape[1],
+                "y": anonymized_embeddings.shape[1],
+            },
+            gt=None,
+        )
+
+        model.fit(loader, loader)
+
+        mi, mi_sigma = model.compute_mi()
+
+        return float(mi), float(mi_sigma)
+
+    finally:
+        # Remove MINDE path to avoid conflicts with this project's src package
+        if str(minde_root) in sys.path:
+            sys.path.remove(str(minde_root))
 
 
 __all__ = [
