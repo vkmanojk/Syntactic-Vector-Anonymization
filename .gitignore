@@ -45,3 +45,4 @@ saved_inversion_model/
 *.pth
 *.bin
 *.ckpt
+*.csv
