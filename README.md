@@ -215,7 +215,7 @@ After cloning, the directory structure should resemble
 ```text
 Syntactic-Vector-Anonymization/
 │
-├── MINDE/
+├── minde/
 ├── data/
 ├── notebooks/
 ├── src/
