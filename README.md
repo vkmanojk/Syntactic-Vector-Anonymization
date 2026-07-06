@@ -79,8 +79,7 @@ Syntactic-Vector-Anonymization/
 ├── src/
 │   ├── anonymization/
 │   ├── evaluation/
-│   ├── inversion/
-│   └── wrappers/
+│   └── inversion/
 │
 ├── requirements.txt
 ├── requirements-mi.txt
@@ -221,8 +220,6 @@ Syntactic-Vector-Anonymization/
 ├── src/
 └── ...
 ```
-
-The provided wrapper automatically interfaces with the MINDE implementation during Mutual Information estimation.
 
 ---
 
@@ -390,14 +387,11 @@ src/
 │   ├── semantic.py
 │   └── metrics.py
 │
-├── inversion/
-│   ├── model.py
-│   ├── training.py
-│   ├── reconstruction.py
-│   └── metrics.py
-│
-└── wrappers/
-    └── mutual_information.py
+└── inversion/
+    ├── model.py
+    ├── training.py
+    ├── reconstruction.py
+    └── metrics.py
 ```
 
 The source code is designed to be reusable outside the provided notebooks and can be imported directly into other Python projects.
